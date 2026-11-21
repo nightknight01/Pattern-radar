@@ -1,0 +1,58 @@
+# 型態雷達：每個交易日盤後自動更新（抓資料 → 掃描 → 回測 → 寄信 → 更新網站）
+# 這個檔案要放在 .github/workflows/radar.yml
+name: 型態雷達每日更新
+on:
+  schedule:
+    - cron: "30 9 * * 1-5"    # 台北 17:30（週一到週五）
+    - cron: "30 12 * * 1-5"   # 台北 20:30 補跑（資料晚公布或 17:30 失敗時）
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "就算沒有新交易日也重新計算"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  actions: write
+  pages: write
+  id-token: write
+concurrency:
+  group: radar
+  cancel-in-progress: false
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: 解壓程式
+        run: |
+          unzip -q -o app.zip -d _build
+          pip install -q -r _build/pipeline/ci/requirements.txt
+      - name: 每日批次
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE: ${{ inputs.force }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        run: bash _build/pipeline/ci/run_ci.sh
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _build/web
+      - id: deploy
+        uses: actions/deploy-pages@v5
+      - name: 結果
+        run: |
+          echo "狀態：${{ steps.run.outputs.status }}｜交易日：${{ steps.run.outputs.trade_date }}｜重算：${{ steps.run.outputs.recomputed }}｜資料來源：${{ steps.run.outputs.state_source }}"
+          test "${{ steps.run.outputs.status }}" = "ok"
