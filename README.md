@@ -1,11 +1,11 @@
 # 型態雷達（Pattern Radar）
 
-台股蔡森十二招＋CIS 型態掃描、類股雷達、回測與盤後警示。網站：https://nightknight01.github.io/pattern-radar/
+台股蔡森十二招＋CIS 型態掃描、類股雷達、回測與盤後警示。網站：https://nightknight01.github.io/Pattern-radar/
 
 本工具只做型態偵測與歷史驗證，不構成投資建議，也不會代為下單。
 
 ## 這個 repo 怎麼運作
-- 每個交易日台北 17:30（20:30 補跑）GitHub Actions 自動執行 `.github/workflows/radar.yml`：
+- 每個交易日台北 15:00（17:30、21:30 補跑法人與融資融券）GitHub Actions 自動執行 `.github/workflows/radar.yml`：
   抓證交所／櫃買中心官方資料 → 掃描 13 個型態 → 回測 → 產生盤後警示 → 更新網站。
 - 網站是純靜態頁（GitHub Pages），只讀批次算好的 JSON。
 - 資料狀態存在 Release「radar-state」的附檔（每天一份，保留最近 7 份）；第一次執行用 repo 裡的 `seed_*` 檔。
