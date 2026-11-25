@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 170
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy_retry.outputs.page_url || steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -51,9 +51,26 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _build/web
+      # deploy-pages 偶爾在 artifact 剛上傳時讀不到（Error: No artifacts named "github-pages"；Fetching artifact metadata failed）。等一下再部署，失敗再重試一次。
+      - name: 等待 Pages artifact 可讀
+        run: sleep 15
       - id: deploy
         uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - name: 重試前再等
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 20
+      - id: deploy_retry
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v5
       - name: 結果
+        env:
+          DEPLOY1: ${{ steps.deploy.outcome }}
+          DEPLOY2: ${{ steps.deploy_retry.outcome }}
         run: |
           echo "狀態：${{ steps.run.outputs.status }}｜交易日：${{ steps.run.outputs.trade_date }}｜重算：${{ steps.run.outputs.recomputed }}｜資料來源：${{ steps.run.outputs.state_source }}"
           test "${{ steps.run.outputs.status }}" = "ok"
+          if [ "$DEPLOY1" != "success" ] && [ "$DEPLOY2" != "success" ]; then
+            echo "::error::GitHub Pages 部署失敗。請稍後到 Actions 按 Run workflow 開新的一次，不要重跑同一筆失敗的工作。"
+            exit 1
+          fi
