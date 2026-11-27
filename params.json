@@ -147,6 +147,25 @@
     "ma_long_n": 20,
     "mult_long": 1.0
   },
+  "laowang": {
+    "_說明": "老王 SOP（四海遊龍／四面楚歌／空方缺口回補）。ma_lengths 四條均線天數：5、10、20（月線，SOP 沒講第四條，先用月線補，待確認）、100（≈20 週）；slope_lookback 跟幾根前比算上彎／下彎；require_close_above 是否要求收盤在四線之上（四面楚歌為之下）；exit_ma 持有者出場均線（收盤跌破／站上）；gap_lookback 往回找向下缺口的根數；gap_min_pct 缺口最小幅度；min_bars 最少 K 線根數；taiex_key_lows 台股加權指數的關鍵低點（只畫在加權指數 K 線頁當參考線）。",
+    "ma_lengths": [
+      5,
+      10,
+      20,
+      100
+    ],
+    "slope_lookback": 1,
+    "require_close_above": true,
+    "exit_ma": 20,
+    "gap_lookback": 60,
+    "gap_min_pct": 0.005,
+    "min_bars": 110,
+    "taiex_key_lows": [
+      39384.85,
+      37837.05
+    ]
+  },
   "sector": {
     "_說明": "類股綜合分權重與命中門檻",
     "w1": 0.4,
